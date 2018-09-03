@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 public class UIManager
 {
+	private static IWindowMetaInfoProvider _metaInfoProvider; 
+	
 	private static UIManager _ins;
 	public static UIManager Instance
 	{
@@ -32,11 +35,19 @@ public class UIManager
 		_openedWindowDict = new Dictionary<string, WindowController>(20);
 		_aliveWindowDict = new Dictionary<string, WindowController>(100);
 		
+		SetWindowControllerFactory(new DefaultWindowControllerFactory());
+
+		LoadMetaInfos();
+
 	}
 
 	private void LoadMetaInfos()
 	{
-		
+		if (_metaInfoProvider == null)
+		{
+			_metaInfoProvider = new DefaultWindowMetaInfoProvider();
+		}
+		_metaInfoProvider.Load(ref _metaInfoDict);
 	}
 	
 	private Dictionary<string, WindowMetaInfo> _metaInfoDict;
@@ -149,14 +160,11 @@ public class UIManager
 		var path = metaInfo.WindowResourcePath;
 
 		var prefab = ResMgr.Load<GameObject>(path);
+		
 		var winObj = GameObject.Instantiate(prefab);
 
 		var tr = winObj.transform;
 		tr.SetParent(_windowRootTr);
-
-		tr.localPosition = Vector3.zero;
-		tr.localRotation = Quaternion.identity;
-		tr.localScale = Vector3.zero;
 
 		var win = winObj.GetComponent(metaInfo.WindowType) as Window;
 
@@ -208,4 +216,64 @@ public class WindowMetaInfo
 	public WindowControllerTypeEnum ControllerType;
 	public System.Type WindowControllerCSharpClassType;
 
+	public string LuaScriptPath;
+
+}
+
+public interface IWindowMetaInfoProvider
+{
+	void Load(ref Dictionary<string, WindowMetaInfo> dict);
+}
+
+public class DefaultWindowMetaInfoProvider : IWindowMetaInfoProvider
+{
+	public void Load(ref Dictionary<string, WindowMetaInfo> dict)
+	{
+		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+		foreach (var assembly in assemblies)
+		{
+			var typs = assembly.GetExportedTypes();
+			foreach (var t in typs)
+			{
+				var arrts = Attribute.GetCustomAttributes(t);
+				foreach (var a in arrts)
+				{
+					if (a is WindowDefineAttribute)
+					{
+						_Load(t, ref dict);
+					}
+				}
+			}			
+		}
+	}
+
+	private void _Load(System.Type clsTyp, ref Dictionary<string, WindowMetaInfo> dict)
+	{
+		FieldInfo[] fields = clsTyp.GetFields();
+		foreach (var f in fields)
+		{
+			var objs = f.GetCustomAttributes(typeof(WindowMetaInfoAttribute), false);
+			foreach (var attr in objs)
+			{
+				var metaAttr = attr as WindowMetaInfoAttribute;
+				var metaInfo = GetMetaInfoFromAttr(metaAttr);
+				var winId = f.GetValue(null) as string;
+				metaInfo.WindowID = winId;
+				
+				dict.Add(winId, metaInfo);
+			}
+		}
+	}
+
+	private WindowMetaInfo GetMetaInfoFromAttr(WindowMetaInfoAttribute attr)
+	{
+		var info = new WindowMetaInfo();
+		info.ControllerType = attr.ControllerTypeEnum;
+		info.WindowResourcePath = attr.WindowResPath;
+		info.WindowType = attr.WindowType;
+		info.WindowControllerCSharpClassType = attr.WindowControllerCSharpType;
+		info.LuaScriptPath = attr.LuaScriptPath;
+		
+		return info;
+	}
 }

@@ -36,7 +36,13 @@ public class ResMgr
 
 	public static T Load<T>(string path) where T : UnityEngine.Object
 	{
-		return Instance._Load<T>(path);
+		var o = Instance._Load<T>(path);
+		if (o == null)
+		{
+			Debug.LogError("res is null, path:" + path);
+		}
+
+		return o;
 	}
 
 	public static IResAsyncLoadOperation<T> LoadAsync<T>(string path) where T : UnityEngine.Object
