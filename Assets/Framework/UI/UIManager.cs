@@ -38,7 +38,11 @@ public class UIManager
 		SetWindowControllerFactory(new DefaultWindowControllerFactory());
 
 		LoadMetaInfos();
+	}
 
+	public static void SetWindowMetaInfoProvider(IWindowMetaInfoProvider provider)
+	{
+		_metaInfoProvider = provider;
 	}
 
 	private void LoadMetaInfos()
@@ -101,6 +105,10 @@ public class UIManager
 	{
 		//some strategy to show window
 		winCtrl.Window.gameObject.SetActive(true);
+		var tr = winCtrl.Window.gameObject.transform;
+
+		tr.localPosition = Vector3.zero;
+		tr.localScale = Vector3.one;
 		
 		winCtrl.OnWindowOpen(param);
 		_openedWindowDict.Add(winCtrl.WinMetaInfo.WindowID, winCtrl);
