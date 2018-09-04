@@ -3,3 +3,5 @@
 
 # 概括
 基于MVC思想，抽象出Window、WindowController概念。设计上支持C#、Lua的窗口实现。通过实现IUIManagerPlugin接口来扩展UIManager的管理逻辑。
+
+实现了一个简单demo，见Assets/Demo/Base/
