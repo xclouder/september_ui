@@ -22,6 +22,14 @@ public class UIManager
 		}
 	}
 
+
+	private List<IUIManagerPlugin> _plugins = new List<IUIManagerPlugin>(8);
+
+	public void AddPlugin(IUIManagerPlugin plugin)
+	{
+		_plugins.Add(plugin);
+	}
+	
 	private Transform _windowRootTr;
 	public UIManager()
 	{
@@ -38,6 +46,13 @@ public class UIManager
 		SetWindowControllerFactory(new DefaultWindowControllerFactory());
 
 		LoadMetaInfos();
+		
+		LoadDefaultPlugins();
+	}
+
+	private void LoadDefaultPlugins()
+	{
+		AddPlugin(new StackWindowManagePlugin());
 	}
 
 	public static void SetWindowMetaInfoProvider(IWindowMetaInfoProvider provider)
@@ -88,9 +103,24 @@ public class UIManager
 			winCtrl.OnInit(metaInfo);
 			
 			winCtrl.OnWindowWillCreate();
+			
+			
+			foreach (var p in _plugins)
+			{
+				p.OnWillCreateWindow(winCtrl, null);
+			}
+			
+			
 			var win = CreateWindow(metaInfo);
 			winCtrl.OnWindowCreated(win);
 			_aliveWindowDict.Add(winId, winCtrl);
+			
+			
+			foreach (var p in _plugins)
+			{
+				p.OnWindowCreated(winCtrl, win);
+			}
+			
 
 			_OpenWindow(winCtrl, param);
 			
@@ -105,6 +135,12 @@ public class UIManager
 
 	private void _OpenWindow(WindowController winCtrl, BaseOpenWindowParams param)
 	{
+		foreach (var p in _plugins)
+		{
+			p.OnWillOpenWindow(winCtrl, winCtrl.Window);
+		}
+		
+		
 		//some strategy to show window
 		winCtrl.Window.gameObject.SetActive(true);
 		var tr = winCtrl.Window.gameObject.transform;
@@ -116,6 +152,12 @@ public class UIManager
 		
 		winCtrl.OnWindowOpen(param);
 		_openedWindowDict.Add(winCtrl.WinMetaInfo.WindowID, winCtrl);
+		
+		
+		foreach (var p in _plugins)
+		{
+			p.OnDidOpenWindow(winCtrl, winCtrl.Window);
+		}
 	}
 
     public void OpenWindowAsync(string winId, System.Object token, BaseOpenWindowParams param = null)
@@ -128,12 +170,24 @@ public class UIManager
 		WindowController theWinCtrl;
 		if (_openedWindowDict.TryGetValue(winId, out theWinCtrl))
 		{
+			foreach (var p in _plugins)
+			{
+				p.OnWillCloseWindow(theWinCtrl, theWinCtrl.Window);
+			}
+			
+			
 			//这里抽象不同打开/关闭策略
 			theWinCtrl.Window.gameObject.SetActive(false);
 			
 			theWinCtrl.OnWindowClosed(param);
 
 			_openedWindowDict.Remove(winId);
+			
+			
+			foreach (var p in _plugins)
+			{
+				p.OnDidCloseWindow(theWinCtrl, theWinCtrl.Window);
+			}
 		}
 		else
 		{
@@ -143,6 +197,12 @@ public class UIManager
 
 	private void DestroyWindow(WindowController winCtrl)
 	{
+		foreach (var p in _plugins)
+		{
+			p.OnWillDestroyWindow(winCtrl, winCtrl.Window);
+		}
+		
+		
 		GameObject.Destroy(winCtrl.Window);
 		winCtrl.OnWindowDestroyed();
 
@@ -150,6 +210,12 @@ public class UIManager
 		
 		Debug.Assert(_aliveWindowDict.ContainsKey(winId));
 		_aliveWindowDict.Remove(winId);
+		
+		
+		foreach (var p in _plugins)
+		{
+			p.OnDidDestroyWindow(winCtrl, winCtrl.Window);
+		}
 	}
 
 

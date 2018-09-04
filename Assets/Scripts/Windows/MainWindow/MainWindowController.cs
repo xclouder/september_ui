@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MainWindowController : WindowController {
+public class MainWindowController : WindowController, IWindowStackable {
 	public override void OnInit(WindowMetaInfo winMeta)
 	{
 		base.OnInit(winMeta);
