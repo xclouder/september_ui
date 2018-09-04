@@ -9,7 +9,7 @@ public static class WindowType
 	[WindowMetaInfo("Windows/MainWindow", typeof(MainWindowController), typeof(MainWindow))]
 	public static string MainWindow = "MainWindow";
 	
-	[WindowMetaInfo("Windows/ShopWindow", typeof(MainWindowController), typeof(ShopWindow))]
+	[WindowMetaInfo("Windows/ShopWindow", typeof(ShopWindowController), typeof(ShopWindow))]
 	public static string ShopWindow = "ShopWindow";
 	
 	

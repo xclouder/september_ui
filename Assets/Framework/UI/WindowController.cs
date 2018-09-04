@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class WindowController
 {
@@ -28,6 +29,8 @@ public class WindowController
 	public virtual void OnInit(WindowMetaInfo winMeta)
 	{
 		_winMetaInfo = winMeta;
+		
+		
 	}
 	
 	public virtual void OnWindowWillCreate()
@@ -37,6 +40,7 @@ public class WindowController
 	
 	public virtual void OnWindowCreated(Window w)
 	{
+		w.Bind(this);
 		SetWindow(w);	
 	}
 
@@ -55,4 +59,47 @@ public class WindowController
 		_window = null;
 	}
 
+	#region ui callback regist
+
+	private UICallbackMap _uiCallbackMap = new UICallbackMap();
+	public UICallbackMap UICallbackMap
+	{
+		get { return _uiCallbackMap; }
+	}
+	
+	protected void RegisterButtonCallback(string key, UnityAction cb)
+	{
+		_uiCallbackMap.RegisterButtonCallback(key, cb);
+	}
+	
+	#endregion
+	
+
+}
+
+public class UICallbackMap
+{
+	private Dictionary<string, UnityAction> _btnCbDict;
+
+	public void RegisterButtonCallback(string key, UnityAction cb)
+	{
+		if (_btnCbDict == null)
+		{
+			_btnCbDict = new Dictionary<string, UnityAction>(8);
+		}
+
+		_btnCbDict[key] = cb;
+	}
+
+	public UnityAction GetButtonCallback(string key)
+	{
+		if (_btnCbDict == null)
+		{
+			return null;
+		}
+		
+		UnityAction cb;
+		_btnCbDict.TryGetValue(key, out cb);
+		return cb;
+	}
 }

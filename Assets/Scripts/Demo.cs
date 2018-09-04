@@ -10,8 +10,4 @@ public class Demo : MonoBehaviour {
 		UIManager.Instance.OpenWindow(WindowType.MainWindow);
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 }

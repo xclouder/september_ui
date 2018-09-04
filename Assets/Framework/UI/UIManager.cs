@@ -77,6 +77,8 @@ public class UIManager
 				//reopen it
 				_OpenWindow(winCtrl, param);
 			}
+
+			return winCtrl;
 		}
 
 		WindowMetaInfo metaInfo;
@@ -124,6 +126,7 @@ public class UIManager
 		WindowController theWinCtrl;
 		if (_openedWindowDict.TryGetValue(winId, out theWinCtrl))
 		{
+			//这里抽象不同打开/关闭策略
 			theWinCtrl.Window.gameObject.SetActive(false);
 			
 			theWinCtrl.OnWindowClosed(param);
