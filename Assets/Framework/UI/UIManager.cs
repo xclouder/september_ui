@@ -111,6 +111,8 @@ public class UIManager
 
 		tr.localPosition = Vector3.zero;
 		tr.localScale = Vector3.one;
+		var rectTr = tr as RectTransform;
+		rectTr.sizeDelta = Vector2.zero;
 		
 		winCtrl.OnWindowOpen(param);
 		_openedWindowDict.Add(winCtrl.WinMetaInfo.WindowID, winCtrl);
